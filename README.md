@@ -35,9 +35,177 @@ STEP-5: Display the obtained cipher text.
 
 
 Program:
+```
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
 
+char matrix[5][5];
+void generate_matrix(char key[]) {
+    int used[26] = {0};
+    int i, k = 0;
+    char ch;
 
+    for (i = 0; key[i] != '\0'; i++) {
+        ch = toupper(key[i]);
+        if (ch == 'J') ch = 'I';
 
+        if (isalpha(ch) && !used[ch - 'A']) {
+            used[ch - 'A'] = 1;
+            matrix[k / 5][k % 5] = ch;
+            k++;
+        }
+    }
 
+    for (ch = 'A'; ch <= 'Z'; ch++) {
+        if (ch == 'J') continue;
+        if (!used[ch - 'A']) {
+            used[ch - 'A'] = 1;
+            matrix[k / 5][k % 5] = ch;
+            k++;
+        }
+    }
+}
 
+void find_position(char ch, int *row, int *col) {
+    int i, j;
+    for (i = 0; i < 5; i++) {
+        for (j = 0; j < 5; j++) {
+            if (matrix[i][j] == ch) {
+                *row = i;
+                *col = j;
+                return;
+            }
+        }
+    }
+}
+
+void preprocess_text(char text[], char prepared[]) {
+    int i = 0, k = 0;
+    char ch1, ch2;
+
+    while (text[i] != '\0') {
+        if (!isalpha(text[i])) {
+            i++;
+            continue;
+        }
+
+        ch1 = toupper(text[i]);
+        if (ch1 == 'J') ch1 = 'I';
+
+        if (text[i + 1] != '\0') {
+            ch2 = toupper(text[i + 1]);
+            if (ch2 == 'J') ch2 = 'I';
+
+            if (!isalpha(text[i + 1])) {
+                prepared[k++] = ch1;
+                i++;
+            }
+            else if (ch1 == ch2) {
+                prepared[k++] = ch1;
+                prepared[k++] = 'X';
+                i++;
+            }
+            else {
+                prepared[k++] = ch1;
+                prepared[k++] = ch2;
+                i += 2;
+            }
+        } else {
+            prepared[k++] = ch1;
+            prepared[k++] = 'X';
+            i++;
+        }
+    }
+
+    if (k % 2 != 0) {
+        prepared[k++] = 'X';
+    }
+
+    prepared[k] = '\0';
+}
+
+void encrypt(char text[], char cipher[]) {
+    int i, r1, c1, r2, c2;
+
+    for (i = 0; i < strlen(text); i += 2) {
+        find_position(text[i], &r1, &c1);
+        find_position(text[i + 1], &r2, &c2);
+
+        if (r1 == r2) {
+            cipher[i] = matrix[r1][(c1 + 1) % 5];
+            cipher[i + 1] = matrix[r2][(c2 + 1) % 5];
+        }
+        else if (c1 == c2) {
+            cipher[i] = matrix[(r1 + 1) % 5][c1];
+            cipher[i + 1] = matrix[(r2 + 1) % 5][c2];
+        }
+        else {
+            cipher[i] = matrix[r1][c2];
+            cipher[i + 1] = matrix[r2][c1];
+        }
+    }
+    cipher[i] = '\0';
+}
+
+void decrypt(char cipher[], char plain[]) {
+    int i, r1, c1, r2, c2;
+
+    for (i = 0; i < strlen(cipher); i += 2) {
+        find_position(cipher[i], &r1, &c1);
+        find_position(cipher[i + 1], &r2, &c2);
+
+        if (r1 == r2) {
+            plain[i] = matrix[r1][(c1 - 1 + 5) % 5];
+            plain[i + 1] = matrix[r2][(c2 - 1 + 5) % 5];
+        }
+        else if (c1 == c2) {
+            plain[i] = matrix[(r1 - 1 + 5) % 5][c1];
+            plain[i + 1] = matrix[(r2 - 1 + 5) % 5][c2];
+        }
+        else {
+            plain[i] = matrix[r1][c2];
+            plain[i + 1] = matrix[r2][c1];
+        }
+    }
+    plain[i] = '\0';
+}
+
+int main() {
+    char key[100], plain[100], prepared[200], cipher[200], decrypted[200];
+    int i, j;
+
+    printf("Enter the key: ");
+    fgets(key, sizeof(key), stdin);
+    key[strcspn(key, "\n")] = '\0';   // remove newline
+
+    generate_matrix(key);
+
+    printf("\nPlayfair Matrix:\n");
+    for (i = 0; i < 5; i++) {
+        for (j = 0; j < 5; j++) {
+            printf("%c ", matrix[i][j]);
+        }
+        printf("\n");
+    }
+
+    printf("\nEnter the plain text: ");
+    fgets(plain, sizeof(plain), stdin);
+    plain[strcspn(plain, "\n")] = '\0'; // remove newline
+
+    preprocess_text(plain, prepared);
+    encrypt(prepared, cipher);
+    decrypt(cipher, decrypted);
+
+    printf("\nPrepared Text : %s", prepared);
+    printf("\nEncrypted Text: %s", cipher);
+    printf("\nDecrypted Text: %s\n", decrypted);
+
+    return 0;
+}
+```
 Output:
+
+<img width="552" height="486" alt="Screenshot 2026-01-26 185105" src="https://github.com/user-attachments/assets/578a08c3-9e44-48d6-bb51-3ad2fe572ef9" />
+
+
