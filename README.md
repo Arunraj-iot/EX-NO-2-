@@ -208,4 +208,8 @@ Output:
 
 <img width="552" height="486" alt="Screenshot 2026-01-26 185105" src="https://github.com/user-attachments/assets/578a08c3-9e44-48d6-bb51-3ad2fe572ef9" />
 
+Result :
+The  the Playfair Substitution technique is executed successfully
+
+
 
